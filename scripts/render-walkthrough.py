@@ -11,7 +11,7 @@ root = Path(__file__).resolve().parents[1]
 source = root / "test-results"
 output = root / "docs/images"
 output.mkdir(parents=True, exist_ok=True)
-names = ["desk-overview", "desk-draft", "desk-recovery", "desk-receipt", "desk-connections", "desk-mobile"]
+names = ["desk-overview", "desk-draft", "desk-recovery", "desk-receipt", "desk-connections", "desk-mobile", "template-preview", "template-brief", "template-mobile"]
 for name in names:
     copyfile(source / f"{name}.png", output / f"{name}.png")
 
@@ -36,4 +36,4 @@ for im, (_, caption, _) in zip(scaled, scenes):
     frame.paste(im, (0, 46))
     frames.append(frame.quantize(colors=128, method=Image.Quantize.MEDIANCUT))
 frames[0].save(output / "workflow.gif", save_all=True, append_images=frames[1:], duration=[scene[2] for scene in scenes], loop=0, optimize=True, disposal=2)
-print(f"Saved six UI captures and workflow.gif ({(output / 'workflow.gif').stat().st_size // 1024} KiB)")
+print(f"Saved nine UI captures and workflow.gif ({(output / 'workflow.gif').stat().st_size // 1024} KiB)")

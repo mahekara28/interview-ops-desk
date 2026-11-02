@@ -4,6 +4,8 @@ Interview coordination is a consistency problem with a human consequence. The AT
 
 Greenhouse's [rescheduling guide](https://support.greenhouse.io/hc/en-us/articles/200241969-Reschedule-or-cancel-an-interview) describes one concrete case: changes through an external calendar require a separately updated candidate confirmation. Interview Ops Desk explores that handoff with a small working prototype.
 
+The project is also a reusable template: [the adapter guide](TEMPLATE.md) shows how JSON imports, a custom HTTP endpoint and the existing Harvest adapter supply the same workflows. The template includes an executable MCP walkthrough and a separate imported workspace.
+
 ## A deliberate scope
 
 One screen holds a queue, the source comparison and a proposed candidate update. The default case is fictional: Maya's interview moved by an hour, the ATS and calendar agree, and the last recorded confirmation still has the old time. The rules detect the mismatch. A template composes the confirmed facts in the candidate's named time zone. A coordinator reviews the wording before approving a simulated delivery.
@@ -40,6 +42,6 @@ These tests establish behavior on the tested fixtures. They do not establish emp
 
 ## Resume wording after reviewing the code and demo
 
-“Built a recruiting operations prototype that compares interview evidence, prepares reviewed candidate updates and records simulated delivery recovery. Exposed inspection and proposal tools through MCP, with revision checks and local receipt idempotency.”
+“Built a recruiting MCP template with candidate briefs, source-attributed coordination checks and reviewed follow-ups. Added validated JSON imports, a custom HTTP provider contract and revision checks that reject outdated proposals.”
 
 Keep professional Greenhouse scheduling experience in the employment section. This prototype is separate evidence of technical and operational judgment.

@@ -13,4 +13,6 @@ python3 scripts/render-walkthrough.py
 
 `docs/images/workflow.gif` combines four actual UI states: the evidence mismatch, the draft, the simulated failure and the local receipt. The caption bar is added by the media script. The frames are resized and padded consistently; application content is not redrawn. It is a looping walkthrough, not a video of a live Greenhouse account.
 
+The template preview, application brief and mobile captures also come from the browser tests. An actual MCP client creates the proposal shown in `template-brief.png`. The synthetic source labels remain visible.
+
 The README provides a still-image alternative for readers requesting reduced motion. Fonts are self-hosted Manrope and DM Sans (SIL Open Font License); icons come from Lucide (ISC). The logo is an original SVG in `public/favicon.svg`.

@@ -2,9 +2,11 @@
 
 ## Default demo
 
-`npm ci && npm run build && npm start` creates a local SQLite database and seeds six fictional interviews. The app is available at `http://127.0.0.1:4310`. Nothing is sent to Greenhouse, Calendar, Slack, an email service or an LLM in demo mode. UI requests and MCP tools use the same application rules and data.
+`npm ci && npm run build && npm start` creates a local SQLite database and seeds six fictional interviews. The app is available at `http://127.0.0.1:4310`. Nothing is sent to Greenhouse, Calendar, Slack, an email service or an LLM in demo mode. UI requests and MCP tools use the same application rules and data. Demo, imported and live workspaces are kept separate.
 
 All credentials belong in environment variables or an ignored `.env` file. Use `.env.example` as a starting point. The dashboard displays connection state but never receives the credentials.
+
+For validated file imports, the sample HTTP provider and the adapter contract, see [Template](TEMPLATE.md). Set `OPS_PROVIDER=greenhouse` (the default) for the following adapter, or `OPS_PROVIDER=json-http` for a custom snapshot endpoint.
 
 ## Greenhouse Harvest v3
 
@@ -20,7 +22,7 @@ The adapter posts a form to `https://auth.greenhouse.io/token`, using HTTP Basic
 
 Requests cover scheduled interviews starting between now and 14 days from now. Pagination follows same-origin `/v3/interviews` links, with a 20-page safety limit. Authentication is renewed once after a 401. Rate limits, timeouts and schema errors fail the sync without replacing the last complete snapshot. Narrow the job scope for larger accounts.
 
-Only timed, scheduled interviews are imported. All-day events, take-home assignments and other statuses are outside this prototype. The API feed contains application/job IDs; candidate identity enrichment is not implemented. No candidate email is guessed from a name or application ID.
+Only timed, scheduled interviews are imported. All-day events, take-home assignments and other statuses are outside this prototype. The API feed contains application/job IDs; candidate identity enrichment is not implemented. The display time zone defaults to UTC because this feed does not establish a candidate time zone. No candidate email is guessed from a name or application ID.
 
 The adapter has contract tests against the [documented v3 response](https://harvestdocs.greenhouse.io/reference/get_v3-interviews), but has not been exercised against a live Greenhouse account.
 
