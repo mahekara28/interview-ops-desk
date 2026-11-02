@@ -4,9 +4,15 @@ import { existsSync } from 'node:fs';
 import { createApp } from './app.js';
 import { Store } from './store.js';
 import { LiveAdapters } from './adapters.js';
-import { adapterConfig, dataPath } from './config.js';
+import { adapterConfig, dataPath, providerKind, httpProviderConfig } from './config.js';
+import { HttpSnapshotProvider } from './http-provider.js';
 const store = new Store(dataPath);
-const app = createApp(store, new LiveAdapters(adapterConfig));
+const app = createApp(
+  store,
+  providerKind === 'json-http'
+    ? new HttpSnapshotProvider(httpProviderConfig)
+    : new LiveAdapters(adapterConfig),
+);
 if (process.argv.includes('--dev')) {
   const { createServer } = await import('vite');
   const vite = await createServer({ server: { middlewareMode: true }, appType: 'spa' });

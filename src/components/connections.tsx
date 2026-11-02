@@ -39,15 +39,15 @@ export function Connections({ state, onDemo }: { state: DeskState; onDemo: () =>
             MCP brings your assistant.
           </h2>
           <p>
-            Greenhouse and Calendar provide source evidence. One shared rules engine powers both
-            this dashboard and the assistant’s tools.
+            Provider adapters and validated snapshots supply source evidence. One shared rules
+            engine powers both this dashboard and the assistant’s tools.
           </p>
         </div>
         <div className="architecture">
           <div className="source-stack">
             <span>
               <Leaf size={17} />
-              Greenhouse API
+              ATS / JSON snapshot
             </span>
             <span>
               <CalendarDays size={17} />
@@ -92,7 +92,9 @@ export function Connections({ state, onDemo }: { state: DeskState; onDemo: () =>
                 {c.status === 'demo'
                   ? 'Simulated'
                   : c.status === 'ready'
-                    ? 'Tools available'
+                    ? c.id === 'mcp'
+                      ? 'Tools available'
+                      : 'Snapshot loaded'
                     : c.status === 'configured'
                       ? 'Credentials configured'
                       : 'Not connected'}
@@ -103,11 +105,15 @@ export function Connections({ state, onDemo }: { state: DeskState; onDemo: () =>
             <div className="connection-description">
               {c.id === 'greenhouse'
                 ? 'OAuth client credentials read scheduled interviews. Each interview is matched to its calendar event by external_event_id.'
-                : c.id === 'calendar'
-                  ? 'Read the matching event’s time, meeting link and attendee responses. Missing evidence stays visible.'
-                  : c.id === 'mcp'
-                    ? 'An assistant can list cases, inspect evidence and prepare a draft. Approval and demo delivery stay in this dashboard.'
-                    : 'The demo records receipts locally. Live mode exports a draft; it has no email sender and cannot confirm real delivery.'}
+                : c.id === 'custom'
+                  ? 'Your endpoint returns the versioned snapshot contract. The included sample API returns fictional data; an employer adapter requires authorized access.'
+                  : c.id === 'snapshot'
+                    ? 'Validated file import with explicit provenance. This is a point-in-time snapshot, not a live provider connection.'
+                    : c.id === 'calendar'
+                      ? 'Read the matching event’s time, meeting link and attendee responses. Missing evidence stays visible.'
+                      : c.id === 'mcp'
+                        ? 'Retrieve candidate briefs, list coordination gaps, inspect observed changes and prepare follow-ups. MCP has no send or ATS-write tool.'
+                        : 'The demo records receipts locally. Live mode exports a draft; it has no email sender and cannot confirm real delivery.'}
             </div>
           </article>
         ))}
@@ -126,8 +132,8 @@ export function Connections({ state, onDemo }: { state: DeskState; onDemo: () =>
           </button>
           {copyError && <p role="alert">{copyError}</p>}
           <blockquote>
-            “Inspect the interviews that need attention. Prepare a candidate update for the first
-            case whose source records agree.”
+            “List coordination gaps in the demo workspace. Prepare a brief for application-1,
+            including source IDs, timestamps and unknowns.”
           </blockquote>
           <small>
             Drafts appear in the same dashboard. No model API key is needed by the desk; your MCP

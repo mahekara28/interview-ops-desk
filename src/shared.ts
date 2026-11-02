@@ -1,10 +1,19 @@
-export type Mode = 'demo' | 'live';
+export type Mode = 'demo' | 'imported' | 'live';
+export type EvidenceSource = {
+  provider: string;
+  workspaceId: string;
+  recordId: string;
+  kind: 'synthetic' | 'import' | 'api';
+  observedAt: string;
+  recordUrl?: string;
+};
 export type Slot = {
   start: string;
   end: string;
   meetingUrl: string;
   updatedAt: string;
   eventId: string;
+  recordUrl?: string;
   cancelled?: boolean;
   declined?: string[];
 };
@@ -22,11 +31,15 @@ export type Interview = {
   candidate: string;
   email: string;
   timezone: string;
+  timezoneIsDefault?: boolean;
   role: string;
   stage: string;
   interviewer: string;
   revision: number;
-  greenhouse: Slot;
+  applicationId: string;
+  candidateId: string | null;
+  source: EvidenceSource;
+  ats: Slot;
   calendar: Slot | null;
   notice: Notice | null;
 };

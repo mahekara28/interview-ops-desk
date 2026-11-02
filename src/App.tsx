@@ -11,6 +11,7 @@ import {
   Clock3,
   Code2,
   LayoutDashboard,
+  FileJson,
   Leaf,
   Loader2,
   Mail,
@@ -31,6 +32,7 @@ import { ActivityView } from './components/activity';
 import { Connections } from './components/connections';
 import { EmptyLive } from './components/empty-live';
 import { Dialog } from './components/dialog';
+import { TemplateWorkbench } from './components/template-workbench';
 const initials = (name: string) =>
   name
     .split(' ')
@@ -41,7 +43,9 @@ const initials = (name: string) =>
 export function App() {
   const [state, setState] = useState<DeskState | null>(null);
   const [mode, setMode] = useState<Mode>('demo');
-  const [view, setView] = useState('desk');
+  const [view, setView] = useState(
+    new URLSearchParams(location.search).get('view') === 'template' ? 'template' : 'desk',
+  );
   const [selected, setSelected] = useState<string | null>(null);
   const [filter, setFilter] = useState('attention');
   const [query, setQuery] = useState('');
@@ -146,6 +150,7 @@ export function App() {
             ['desk', LayoutDashboard, 'Coordination'],
             ['activity', Activity, 'Activity'],
             ['connections', Plug, 'Connections'],
+            ['template', FileJson, 'Template'],
           ].map(([key, Icon, label]) => (
             <button
               key={String(key)}
@@ -186,7 +191,13 @@ export function App() {
           <div className="breadcrumb">
             Workspace <span>/</span>{' '}
             <strong>
-              {view === 'desk' ? 'Coordination' : view === 'activity' ? 'Activity' : 'Connections'}
+              {view === 'desk'
+                ? 'Coordination'
+                : view === 'activity'
+                  ? 'Activity'
+                  : view === 'template'
+                    ? 'Template'
+                    : 'Connections'}
             </strong>
           </div>
           <div className="top-actions">
@@ -215,14 +226,18 @@ export function App() {
                   ? 'Keep every interview on track.'
                   : view === 'activity'
                     ? 'Every action, accounted for.'
-                    : 'One desk. Connected evidence.'}
+                    : view === 'template'
+                      ? 'A template with a working workflow.'
+                      : 'One desk. Connected evidence.'}
               </h1>
               <p>
                 {view === 'desk'
                   ? 'Catch the small mismatches before they become someone’s bad day.'
                   : view === 'activity'
                     ? 'Follow each change from source evidence to a reviewed update.'
-                    : 'Bring in the facts. Give your assistant the right tools.'}
+                    : view === 'template'
+                      ? 'Import a sample, inspect a brief, connect your assistant.'
+                      : 'Bring in the facts. Give your assistant the right tools.'}
               </p>
             </div>
             <div className="heading-actions">
@@ -234,6 +249,7 @@ export function App() {
                   disabled={busy}
                 >
                   <option value="demo">Demo workspace</option>
+                  <option value="imported">Imported workspace</option>
                   <option value="live">Live workspace</option>
                 </select>
               </label>
@@ -245,6 +261,10 @@ export function App() {
                 >
                   <RotateCcw size={15} />
                   Reset demo
+                </button>
+              ) : mode === 'imported' ? (
+                <button className="button secondary" onClick={() => setView('template')}>
+                  <FileJson size={15} /> Import snapshot
                 </button>
               ) : (
                 <button
@@ -268,10 +288,15 @@ export function App() {
                   <strong>A working demo, with fictional people.</strong> Updates stay in the local
                   outbox. No email is sent.
                 </>
+              ) : mode === 'imported' ? (
+                <>
+                  <strong>Imported snapshot · export-only drafts.</strong> Uploaded evidence is
+                  separate from live API data. Source labels remain visible.
+                </>
               ) : (
                 <>
-                  <strong>Live evidence · read-only.</strong> Candidate names and email history are
-                  not imported. Export drafts for manual review.
+                  <strong>Connected API workspace · read-only.</strong> Source records may be
+                  synthetic. Check provenance before using a draft.
                 </>
               )}
             </p>
@@ -300,6 +325,13 @@ export function App() {
               <Loader2 className="spin" />
               Opening the desk…
             </div>
+          ) : view === 'template' ? (
+            <TemplateWorkbench
+              onImported={() => {
+                changeMode('imported');
+                setView('desk');
+              }}
+            />
           ) : view === 'desk' ? (
             <>
               <div className="stats">
@@ -349,7 +381,16 @@ export function App() {
                   <span className="stat-note">Approved & recorded</span>
                 </button>
               </div>
-              {mode === 'live' && records.length === 0 ? (
+              {mode === 'imported' && records.length === 0 ? (
+                <div className="empty-live">
+                  <FileJson size={38} />
+                  <h2>Bring a snapshot to the desk.</h2>
+                  <p>Preview the sample JSON or an authorized export in the template workbench.</p>
+                  <button className="button primary" onClick={() => setView('template')}>
+                    Open template
+                  </button>
+                </div>
+              ) : mode === 'live' && records.length === 0 ? (
                 <EmptyLive
                   configured={state.connections[0].status === 'configured'}
                   onConnect={() => setView('connections')}
@@ -412,7 +453,7 @@ export function App() {
                           </div>
                           <div className="candidate-time">
                             <Clock3 size={12} />
-                            {displayDate(r.greenhouse.start)} · {displayTime(r.greenhouse.start)}
+                            {displayDate(r.ats.start)} · {displayTime(r.ats.start)}
                           </div>
                           <span
                             className={`issue-chip ${r.issues.length ? (r.issues.some((x) => x.blocking) ? 'blocked' : 'attention') : 'clear'}`}
@@ -545,7 +586,7 @@ export function App() {
         <Dialog title="Start a fresh demo?" onClose={() => setResetOpen(false)}>
           <p>
             This clears fictional drafts, demo receipts and demo activity, then restores the six
-            sample interviews. Live records are kept separately.
+            sample interviews. Imported and live records are kept separately.
           </p>
           <div className="dialog-actions">
             <button className="button secondary" onClick={() => setResetOpen(false)}>

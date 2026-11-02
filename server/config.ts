@@ -11,3 +11,10 @@ export const adapterConfig: AdapterConfig = {
   googleToken: process.env.GOOGLE_CALENDAR_ACCESS_TOKEN,
   calendarId: process.env.GOOGLE_CALENDAR_ID,
 };
+export const providerKind = process.env.OPS_PROVIDER ?? 'greenhouse';
+if (!['greenhouse', 'json-http'].includes(providerKind))
+  throw new Error('OPS_PROVIDER must be greenhouse or json-http.');
+export const httpProviderConfig = {
+  providerUrl: process.env.OPS_PROVIDER_URL,
+  providerToken: process.env.OPS_PROVIDER_TOKEN,
+};

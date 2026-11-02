@@ -10,6 +10,14 @@ export async function api<T>(path: string, body?: unknown): Promise<T> {
         },
   );
   const result = await response.json();
-  if (!response.ok) throw new Error(result.error ?? 'The request failed.');
+  if (!response.ok)
+    throw new Error(
+      [
+        result.error ?? 'The request failed.',
+        ...(result.issues ?? [])
+          .slice(0, 4)
+          .map((issue: { field: string; message: string }) => `${issue.field}: ${issue.message}`),
+      ].join(' '),
+    );
   return result;
 }

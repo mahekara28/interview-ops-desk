@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import type { Interview, Mode, Proposal, Activity, RecordView } from '../src/shared.js';
 import { DeskError, inspect, makeDraft } from './engine.js';
 import { fixtures } from './fixtures.js';
+import { normalizeSnapshot, parseSnapshot } from './contracts.js';
 
 export class Store {
   db: DatabaseSync;
@@ -16,8 +17,34 @@ export class Store {
       CREATE TABLE IF NOT EXISTS proposals (id TEXT PRIMARY KEY, interview_id TEXT NOT NULL, revision INTEGER NOT NULL, data TEXT NOT NULL, UNIQUE(interview_id,revision));
       CREATE TABLE IF NOT EXISTS activity (id INTEGER PRIMARY KEY AUTOINCREMENT, interview_id TEXT, mode TEXT NOT NULL, kind TEXT NOT NULL, title TEXT NOT NULL, detail TEXT NOT NULL, at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS evidence_changes (id INTEGER PRIMARY KEY AUTOINCREMENT, interview_id TEXT NOT NULL, mode TEXT NOT NULL, application_id TEXT NOT NULL, data TEXT NOT NULL, at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);`);
     if (path !== ':memory:') chmodSync(path, 0o600);
+    // Preserve existing checkouts when moving from Greenhouse-specific to neutral evidence.
+    this.transaction(() => {
+      for (const row of this.db.prepare('SELECT data FROM interviews').all() as {
+        data: string;
+      }[]) {
+        const old = JSON.parse(row.data);
+        if (old.source && old.ats) continue;
+        old.ats = old.ats ?? old.greenhouse;
+        delete old.greenhouse;
+        old.applicationId ??=
+          old.mode === 'demo'
+            ? `application-${old.id.replace('demo-', '')}`
+            : (old.candidate.match(/^Application #(\d+)$/)?.[1] ?? `unknown-${old.id}`);
+        old.candidateId ??= null;
+        old.timezoneIsDefault ??= old.mode === 'live';
+        old.source ??= {
+          provider: old.mode === 'demo' ? 'sample-ats' : 'greenhouse',
+          workspaceId: old.mode === 'demo' ? 'demo' : 'configured-greenhouse',
+          recordId: old.id,
+          kind: old.mode === 'demo' ? 'synthetic' : 'api',
+          observedAt: old.ats.updatedAt,
+        };
+        this.save(old);
+      }
+    });
     if (!this.meta('seeded')) this.resetDemo();
   }
   close() {
@@ -74,7 +101,7 @@ export class Store {
       .sort(
         (a, b) =>
           Number(b.issues.length > 0) - Number(a.issues.length > 0) ||
-          Date.parse(a.greenhouse.start) - Date.parse(b.greenhouse.start),
+          Date.parse(a.ats.start) - Date.parse(b.ats.start),
       );
   }
   log(i: Interview | null, kind: string, title: string, detail: string, mode: Mode = 'demo') {
@@ -120,6 +147,7 @@ export class Store {
       this.db.exec(
         "DELETE FROM proposals WHERE interview_id IN (SELECT id FROM interviews WHERE mode='demo'); DELETE FROM interviews WHERE mode='demo'; DELETE FROM activity WHERE mode='demo'; DELETE FROM events;",
       );
+      this.db.exec("DELETE FROM evidence_changes WHERE mode='demo'");
       for (const i of fixtures()) {
         this.save(i);
         this.log(
@@ -259,6 +287,7 @@ export class Store {
   demoEvent(id: string, revision: number, kind: 'shift' | 'repair', eventId: string) {
     return this.transaction(() => {
       const i = this.get(id);
+      const before = structuredClone(i);
       if (i.mode !== 'demo')
         throw new DeskError(403, 'Scenario controls only work on fictional interviews.');
       if (this.db.prepare('SELECT id FROM events WHERE id=?').get(eventId))
@@ -274,9 +303,10 @@ export class Store {
         c.meetingUrl ||= `https://meet.example.com/${i.id}`;
       }
       c.updatedAt = new Date().toISOString();
-      i.greenhouse = { ...c };
+      i.ats = { ...c };
       i.revision++;
       this.save(i);
+      this.trackChanges(before, i);
       this.db.prepare('INSERT INTO events VALUES (?)').run(eventId);
       this.log(
         i,
@@ -291,40 +321,7 @@ export class Store {
   }
   importLive(records: Interview[], skipped: number) {
     this.transaction(() => {
-      for (const i of records) {
-        const row = this.db.prepare('SELECT data FROM interviews WHERE id=?').get(i.id) as
-          { data: string } | undefined;
-        if (row) {
-          const old: Interview = JSON.parse(row.data);
-          if (
-            Date.parse(i.greenhouse.updatedAt) < Date.parse(old.greenhouse.updatedAt) ||
-            (i.calendar &&
-              old.calendar &&
-              Date.parse(i.calendar.updatedAt) < Date.parse(old.calendar.updatedAt))
-          ) {
-            throw new DeskError(
-              502,
-              'A source returned older evidence. Previous live records have been retained; sync again after the source catches up.',
-            );
-          }
-          const changed =
-            JSON.stringify([old.greenhouse, old.calendar]) !==
-            JSON.stringify([i.greenhouse, i.calendar]);
-          i.revision = old.revision + Number(changed);
-          i.notice = old.notice;
-        }
-        this.save(i);
-      }
-      // A completed bounded sync replaces only the live feed; demo records remain isolated.
-      const keep = new Set(records.map((i) => i.id));
-      for (const row of this.db.prepare("SELECT id FROM interviews WHERE mode='live'").all() as {
-        id: string;
-      }[]) {
-        if (!keep.has(row.id)) {
-          this.db.prepare('DELETE FROM proposals WHERE interview_id=?').run(row.id);
-          this.db.prepare('DELETE FROM interviews WHERE id=?').run(row.id);
-        }
-      }
+      this.replaceFeed(records, 'live');
       this.setMeta('syncAt', new Date().toISOString());
       this.setMeta('syncError', '');
       this.setMeta('syncSkipped', String(skipped));
@@ -336,5 +333,168 @@ export class Store {
         'live',
       );
     });
+  }
+  private trackChanges(before: Interview, after: Interview) {
+    const fields = [
+      'role',
+      'stage',
+      'interviewer',
+      'timezone',
+      'candidate',
+      'email',
+      'applicationId',
+      'candidateId',
+      'ats.start',
+      'ats.end',
+      'ats.meetingUrl',
+      'calendar.start',
+      'calendar.end',
+      'calendar.meetingUrl',
+      'calendar.cancelled',
+      'calendar.declined',
+      'notice.start',
+      'notice.end',
+      'notice.meetingUrl',
+    ];
+    const read = (record: Interview, path: string): unknown =>
+      path
+        .split('.')
+        .reduce<unknown>(
+          (value, part) =>
+            value && typeof value === 'object' ? (value as Record<string, unknown>)[part] : null,
+          record,
+        ) ?? null;
+    const changes = fields.flatMap((field) => {
+      const previous = read(before, field),
+        current = read(after, field);
+      return JSON.stringify(previous) === JSON.stringify(current)
+        ? []
+        : [{ field, before: previous, after: current }];
+    });
+    if (changes.length)
+      this.db
+        .prepare(
+          'INSERT INTO evidence_changes(interview_id,mode,application_id,data,at) VALUES (?,?,?,?,?)',
+        )
+        .run(
+          after.id,
+          after.mode,
+          after.applicationId,
+          JSON.stringify({
+            interviewId: after.id,
+            revision: after.revision,
+            source: after.source,
+            changes,
+          }),
+          new Date().toISOString(),
+        );
+  }
+  changes(mode: Mode, applicationId: string, since: string) {
+    return (
+      this.db
+        .prepare(
+          'SELECT data,at FROM evidence_changes WHERE mode=? AND application_id=? AND at>=? ORDER BY id LIMIT 101',
+        )
+        .all(mode, applicationId, new Date(since).toISOString()) as { data: string; at: string }[]
+    ).map((row) => ({ ...JSON.parse(row.data), observedAt: row.at }));
+  }
+  importSnapshot(value: unknown, expectedVersion: number) {
+    const snapshot = parseSnapshot(value);
+    const records = normalizeSnapshot(snapshot);
+    return this.transaction(() => {
+      const version = Number(this.meta('importVersion') ?? 0);
+      if (version !== expectedVersion)
+        throw new DeskError(
+          409,
+          'The imported workspace changed after preview. Preview the file again.',
+        );
+      const previous = this.meta('importWorkspace');
+      const key = JSON.stringify([snapshot.workspace.provider, snapshot.workspace.id]);
+      if (
+        previous === key &&
+        Date.parse(snapshot.capturedAt) < Date.parse(this.meta('importCapturedAt') ?? '')
+      )
+        throw new DeskError(
+          409,
+          'This snapshot is older than the imported workspace. Import a current export.',
+        );
+      this.replaceFeed(records, 'imported');
+      this.setMeta('importVersion', String(version + 1));
+      this.setMeta('importWorkspace', key);
+      this.setMeta('importCapturedAt', snapshot.capturedAt);
+      this.setMeta('importLabel', snapshot.workspace.label);
+      this.log(
+        null,
+        'import',
+        'Reviewed snapshot imported',
+        `${records.length} records from ${snapshot.workspace.label}. This is a local snapshot, not a live connection.`,
+        'imported',
+      );
+      return { count: records.length, version: version + 1 };
+    });
+  }
+  private replaceFeed(records: Interview[], mode: 'live' | 'imported') {
+    if (new Set(records.map((i) => i.id)).size !== records.length)
+      throw new DeskError(400, 'Duplicate record IDs in provider response.');
+    for (const i of records) {
+      if (i.mode !== mode)
+        throw new DeskError(400, 'Provider returned a record for the wrong workspace.');
+      const row = this.db.prepare('SELECT data FROM interviews WHERE id=?').get(i.id) as
+        { data: string } | undefined;
+      if (row) {
+        const old: Interview = JSON.parse(row.data);
+        if (old.mode !== mode)
+          throw new DeskError(409, 'Provider IDs must not overwrite another workspace.');
+        if (
+          Date.parse(i.ats.updatedAt) < Date.parse(old.ats.updatedAt) ||
+          (i.calendar &&
+            old.calendar &&
+            Date.parse(i.calendar.updatedAt) < Date.parse(old.calendar.updatedAt))
+        ) {
+          throw new DeskError(
+            502,
+            'A source returned older evidence. Previous live records have been retained; sync again after the source catches up.',
+          );
+        }
+        const evidence = (record: Interview) => {
+          const {
+            revision: _revision,
+            source: { observedAt: _observedAt, ...source },
+            ...data
+          } = record;
+          return JSON.stringify({ ...data, source });
+        };
+        if (mode === 'live' && i.source.provider === 'greenhouse') i.notice = old.notice;
+        const changed = evidence(old) !== evidence(i);
+        i.revision = old.revision + Number(changed);
+        if (changed) {
+          this.trackChanges(old, i);
+          this.log(
+            i,
+            'change',
+            `Evidence updated to revision ${i.revision}`,
+            `Source ${i.source.provider}/${i.source.recordId} changed. Review current evidence before preparing or approving an update.`,
+          );
+        }
+      } else {
+        this.log(
+          i,
+          'import',
+          'Interview evidence added',
+          `Source ${i.source.provider}/${i.source.recordId}. Evidence kind: ${i.source.kind}.`,
+        );
+      }
+      this.save(i);
+    }
+    // Only a complete snapshot can replace this workspace. Other modes are untouched.
+    const keep = new Set(records.map((i) => i.id));
+    for (const row of this.db.prepare('SELECT id FROM interviews WHERE mode=?').all(mode) as {
+      id: string;
+    }[]) {
+      if (!keep.has(row.id)) {
+        this.db.prepare('DELETE FROM proposals WHERE interview_id=?').run(row.id);
+        this.db.prepare('DELETE FROM interviews WHERE id=?').run(row.id);
+      }
+    }
   }
 }

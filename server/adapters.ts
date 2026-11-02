@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import type { Interview, Slot } from '../src/shared.js';
+import type { Interview, Slot, Connection } from '../src/shared.js';
 import { DeskError } from './engine.js';
+import type { RecruitingProvider } from './contracts.js';
 
 const date = z.string().datetime({ offset: true });
 const ghSchema = z.object({
@@ -57,7 +58,7 @@ export function normalizeInterview(raw: unknown, rawCalendar?: unknown): Intervi
     Date.parse(row.ends_at) <= Date.parse(row.starts_at)
   )
     return null;
-  const greenhouse: Slot = {
+  const ats: Slot = {
     start: row.starts_at,
     end: row.ends_at,
     updatedAt: row.updated_at,
@@ -71,8 +72,8 @@ export function normalizeInterview(raw: unknown, rawCalendar?: unknown): Intervi
       throw new DeskError(502, 'The calendar event ID does not match the Greenhouse interview.');
     if (event.status === 'cancelled' || (event.start?.dateTime && event.end?.dateTime)) {
       calendar = {
-        start: event.start?.dateTime ?? greenhouse.start,
-        end: event.end?.dateTime ?? greenhouse.end,
+        start: event.start?.dateTime ?? ats.start,
+        end: event.end?.dateTime ?? ats.end,
         updatedAt: event.updated ?? row.updated_at,
         meetingUrl: safeLink(
           event.hangoutLink ??
@@ -92,12 +93,22 @@ export function normalizeInterview(raw: unknown, rawCalendar?: unknown): Intervi
     mode: 'live',
     candidate: `Application #${row.application_id}`,
     email: '',
-    timezone: 'America/New_York',
+    timezone: 'UTC',
+    timezoneIsDefault: true,
     role: `Job #${row.job_id}`,
     stage: `Interview #${row.job_interview_id}`,
     interviewer: row.organizer_id ? `Organizer #${row.organizer_id}` : 'Organizer not provided',
     revision: 1,
-    greenhouse,
+    applicationId: String(row.application_id),
+    candidateId: null,
+    source: {
+      provider: 'greenhouse',
+      workspaceId: 'configured-greenhouse',
+      recordId: String(row.id),
+      kind: 'api',
+      observedAt: new Date().toISOString(),
+    },
+    ats,
     calendar,
     notice: null,
   };
@@ -110,7 +121,29 @@ export type AdapterConfig = {
   googleToken?: string;
   calendarId?: string;
 };
-export class LiveAdapters {
+export class LiveAdapters implements RecruitingProvider {
+  get connections(): Connection[] {
+    return [
+      {
+        id: 'greenhouse',
+        title: 'Greenhouse',
+        status: this.config.clientId && this.config.clientSecret ? 'configured' : 'unconfigured',
+        detail: 'Harvest v3 · read-only interviews',
+      },
+      {
+        id: 'calendar',
+        title: 'Google Calendar',
+        status: this.config.googleToken ? 'configured' : 'unconfigured',
+        detail: 'Read-only · exact event-ID matching',
+      },
+    ];
+  }
+  readonly descriptor = {
+    id: 'greenhouse-calendar',
+    label: 'Greenhouse Harvest v3 + Calendar',
+    workspace: 'live' as const,
+    capabilities: ['interviews', 'application-identity', 'calendar-evidence'],
+  };
   private token?: { value: string; expires: number };
   constructor(
     public config: AdapterConfig,

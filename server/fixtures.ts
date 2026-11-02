@@ -55,7 +55,16 @@ export function fixtures(now = Date.now()): Interview[] {
       stage,
       interviewer,
       revision: 1,
-      greenhouse: { ...slot },
+      applicationId: `application-${index + 1}`,
+      candidateId: `candidate-${index + 1}`,
+      source: {
+        provider: 'sample-ats',
+        workspaceId: 'demo',
+        recordId: id,
+        kind: 'synthetic',
+        observedAt: new Date(now).toISOString(),
+      },
+      ats: { ...slot },
       calendar: { ...slot },
       notice,
     };

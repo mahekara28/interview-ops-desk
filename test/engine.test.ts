@@ -17,7 +17,7 @@ test('finds stale confirmation, declined participant, missing meeting and unknow
 });
 test('equivalent UTC offsets do not produce a false mismatch', () => {
   const i = fixtures()[3];
-  i.greenhouse.start = i.calendar!.start = '2026-11-03T19:00:00Z';
+  i.ats.start = i.calendar!.start = '2026-11-03T19:00:00Z';
   i.notice!.start = '2026-11-03T14:00:00-05:00';
   assert.deepEqual(inspect(i), []);
 });
@@ -32,12 +32,18 @@ test('missing, conflicting and cancelled source evidence blocks a draft', () => 
 });
 test('candidate draft follows named-zone DST, not a fixed UTC offset', () => {
   const i = fixtures()[0];
-  i.greenhouse.start = i.calendar!.start = '2026-07-10T18:00:00Z';
-  i.greenhouse.end = i.calendar!.end = '2026-07-10T18:45:00Z';
+  i.ats.start = i.calendar!.start = '2026-07-10T18:00:00Z';
+  i.ats.end = i.calendar!.end = '2026-07-10T18:45:00Z';
   assert.match(makeDraft(i, 'warm').body, /2:00 PM EDT/);
-  i.greenhouse.start = i.calendar!.start = '2026-11-10T18:00:00Z';
-  i.greenhouse.end = i.calendar!.end = '2026-11-10T18:45:00Z';
+  i.ats.start = i.calendar!.start = '2026-11-10T18:00:00Z';
+  i.ats.end = i.calendar!.end = '2026-11-10T18:45:00Z';
   assert.match(makeDraft(i, 'warm').body, /1:00 PM EST/);
+});
+test('a cancellation recorded only in the ATS still blocks a follow-up', () => {
+  const i = fixtures()[0];
+  i.ats.cancelled = true;
+  assert.equal(inspect(i)[0].code, 'cancelled');
+  assert.throws(() => makeDraft(i, 'warm'), /source evidence/);
 });
 test('failure retains outstanding issue; retry records exactly one receipt', () => {
   const s = new Store(':memory:');
@@ -129,9 +135,9 @@ test('an out-of-order live snapshot is rejected atomically', () => {
     const live = { ...fixtures()[0], id: 'gh-1', mode: 'live' as const };
     s.importLive([live], 0);
     const old = structuredClone(live);
-    old.greenhouse.updatedAt = '2020-01-01T00:00:00Z';
+    old.ats.updatedAt = '2020-01-01T00:00:00Z';
     assert.throws(() => s.importLive([old], 0), /older evidence/);
-    assert.equal(s.get('gh-1').greenhouse.updatedAt, live.greenhouse.updatedAt);
+    assert.equal(s.get('gh-1').ats.updatedAt, live.ats.updatedAt);
     assert.equal(s.get('gh-1').revision, 1);
   } finally {
     s.close();

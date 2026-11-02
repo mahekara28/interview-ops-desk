@@ -12,5 +12,13 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src", "server", "test", "vite.config.ts", "playwright.config.ts"]
+  "include": [
+    "src",
+    "server",
+    "test",
+    "vite.config.ts",
+    "playwright.config.ts",
+    "scripts/*.ts",
+    "examples/*.ts"
+  ]
 }

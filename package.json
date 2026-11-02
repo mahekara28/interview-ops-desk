@@ -1,9 +1,9 @@
 {
   "name": "@mahekara28/interview-ops-desk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "A local recruiting operations desk with evidence checks, reviewed updates and MCP tools.",
+  "description": "A reusable recruiting MCP template with candidate briefs, validated snapshots and reviewed follow-ups.",
   "engines": {
     "node": ">=24.0.0"
   },
@@ -16,7 +16,10 @@
     "test:browser": "playwright test",
     "check": "npm run format:check && npm run build && npm test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "template": "tsx scripts/template.ts",
+    "provider:demo": "tsx examples/provider-server.ts",
+    "demo:mcp": "tsx examples/mcp-walkthrough.ts"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "5.3.0",

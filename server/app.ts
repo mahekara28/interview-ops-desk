@@ -3,11 +3,19 @@ import { z } from 'zod';
 import type { Connection, Mode } from '../src/shared.js';
 import { Store } from './store.js';
 import { DeskError } from './engine.js';
-import { LiveAdapters } from './adapters.js';
 import { resolve } from 'node:path';
+import {
+  parseSnapshot,
+  normalizeSnapshot,
+  snapshotJsonSchema,
+  type RecruitingProvider,
+} from './contracts.js';
+import { sampleSnapshot } from './sample-snapshot.js';
+import { inspect } from './engine.js';
+import { candidateBrief, coordinationGaps } from './workflows.js';
 
 const revision = z.number().int().positive();
-export function createApp(store: Store, adapters: LiveAdapters) {
+export function createApp(store: Store, adapters: RecruitingProvider) {
   const app = express();
   app.disable('x-powered-by');
   app.use((req, res, next) => {
@@ -27,7 +35,47 @@ export function createApp(store: Store, adapters: LiveAdapters) {
     }
     next();
   });
-  app.use(express.json({ limit: '32kb' }));
+  app.use(express.json({ limit: '256kb' }));
+  const workspaceSchema = z.enum(['demo', 'imported', 'live']);
+  app.get('/api/template/schema', (_req, res) => res.json(snapshotJsonSchema));
+  app.get('/api/template/example', (_req, res) => {
+    res.setHeader('Content-Disposition', 'attachment; filename="recruiting-snapshot.json"');
+    res.json(sampleSnapshot());
+  });
+  app.post('/api/template/preview', (req, res) => {
+    const snapshot = parseSnapshot(req.body);
+    res.json({
+      workspace: snapshot.workspace,
+      capturedAt: snapshot.capturedAt,
+      version: Number(store.meta('importVersion') ?? 0),
+      replaces: store.records('imported').length,
+      records: normalizeSnapshot(snapshot).map((record) => ({
+        id: record.id,
+        candidate: record.candidate,
+        applicationId: record.applicationId,
+        role: record.role,
+        findings: inspect(record).length,
+      })),
+    });
+  });
+  app.post('/api/template/import', (req, res) => {
+    const input = z
+      .strictObject({ snapshot: z.unknown(), expectedVersion: z.number().int().nonnegative() })
+      .parse(req.body);
+    res.json(store.importSnapshot(input.snapshot, input.expectedVersion));
+  });
+  app.get('/api/brief', (req, res) => {
+    res.json(
+      candidateBrief(
+        store,
+        workspaceSchema.parse(req.query.workspace ?? 'demo'),
+        z.string().min(1).parse(req.query.applicationId),
+      ),
+    );
+  });
+  app.get('/api/gaps', (req, res) => {
+    res.json(coordinationGaps(store, workspaceSchema.parse(req.query.workspace ?? 'demo')));
+  });
   app.get('/api/mcp-config', (_req, res) => {
     res.json({
       mcpServers: {
@@ -39,25 +87,45 @@ export function createApp(store: Store, adapters: LiveAdapters) {
       },
     });
   });
+  app.get('/api/provider', (_req, res) =>
+    res.json({ ...adapters.descriptor, connections: adapters.connections }),
+  );
   app.get('/api/state', (req, res) => {
-    const mode: Mode = z.enum(['demo', 'live']).parse(req.query.mode ?? 'demo');
-    const c = adapters.config;
+    const mode: Mode = workspaceSchema.parse(req.query.mode ?? 'demo');
+    const sources: readonly Connection[] =
+      mode === 'demo'
+        ? [
+            {
+              id: 'snapshot',
+              title: 'Sample ATS',
+              status: 'demo',
+              detail: 'Fictional interview records',
+            },
+            {
+              id: 'calendar',
+              title: 'Sample calendar',
+              status: 'demo',
+              detail: 'Fictional calendar evidence',
+            },
+          ]
+        : mode === 'imported'
+          ? [
+              {
+                id: 'snapshot',
+                title: 'JSON snapshot',
+                status: store.records('imported').length ? 'ready' : 'unconfigured',
+                detail: store.meta('importLabel') ?? 'Preview a file in the template workbench',
+              },
+              {
+                id: 'calendar',
+                title: 'Calendar evidence',
+                status: 'unconfigured',
+                detail: 'Imported snapshot · no ongoing calendar connection',
+              },
+            ]
+          : adapters.connections;
     const connections: Connection[] = [
-      {
-        id: 'greenhouse',
-        title: 'Greenhouse',
-        status:
-          mode === 'demo' ? 'demo' : c.clientId && c.clientSecret ? 'configured' : 'unconfigured',
-        detail:
-          mode === 'demo' ? 'Synthetic interview records' : 'Harvest v3 · read-only interviews',
-      },
-      {
-        id: 'calendar',
-        title: 'Google Calendar',
-        status: mode === 'demo' ? 'demo' : c.googleToken ? 'configured' : 'unconfigured',
-        detail:
-          mode === 'demo' ? 'Synthetic calendar evidence' : 'Read-only · exact event-ID matching',
-      },
+      ...sources,
       {
         id: 'outbox',
         title: 'Candidate updates',
@@ -148,6 +216,10 @@ export function createApp(store: Store, adapters: LiveAdapters) {
       res.status(400).json({
         error: 'Invalid request or source data.',
         fields: error.issues.map((i) => i.path.join('.')),
+        issues: error.issues.map((i) => ({
+          field: i.path.join('.'),
+          message: i.code === 'custom' ? i.message : 'Missing, invalid, or unsupported value.',
+        })),
       });
       return;
     }

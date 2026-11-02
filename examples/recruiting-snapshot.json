@@ -1,0 +1,222 @@
+{
+  "schemaVersion": "1.0",
+  "workspace": {
+    "id": "sample-team",
+    "provider": "sample-ats",
+    "label": "Fictional recruiting team",
+    "kind": "synthetic"
+  },
+  "capturedAt": "2026-11-02T20:28:57.407Z",
+  "interviews": [
+    {
+      "id": "demo-1",
+      "applicationId": "application-1",
+      "candidateId": "candidate-1",
+      "candidate": {
+        "name": "Maya Chen",
+        "email": "maya.chen@example.com",
+        "timezone": "America/New_York"
+      },
+      "role": "Platform Engineer",
+      "stage": "Technical conversation",
+      "interviewer": "Alex Rivera",
+      "ats": {
+        "start": "2026-11-02T21:30:00.000Z",
+        "end": "2026-11-02T22:15:00.000Z",
+        "updatedAt": "2026-11-02T20:16:57.407Z",
+        "eventId": "calendar-demo-1",
+        "meetingUrl": "https://meet.example.com/demo-1",
+        "declined": []
+      },
+      "calendar": {
+        "start": "2026-11-02T21:30:00.000Z",
+        "end": "2026-11-02T22:15:00.000Z",
+        "updatedAt": "2026-11-02T20:16:57.407Z",
+        "eventId": "calendar-demo-1",
+        "meetingUrl": "https://meet.example.com/demo-1",
+        "declined": []
+      },
+      "confirmation": {
+        "start": "2026-11-02T20:30:00.000Z",
+        "end": "2026-11-02T21:15:00.000Z",
+        "meetingUrl": "https://meet.example.com/demo-1",
+        "sentAt": "2026-11-01T20:28:57.407Z",
+        "receiptId": "sample-demo-1"
+      }
+    },
+    {
+      "id": "demo-2",
+      "applicationId": "application-2",
+      "candidateId": "candidate-2",
+      "candidate": {
+        "name": "Arjun Mehta",
+        "email": "arjun.mehta@example.com",
+        "timezone": "Asia/Kolkata"
+      },
+      "role": "Data Analyst",
+      "stage": "Team interview",
+      "interviewer": "Jordan Lee",
+      "ats": {
+        "start": "2026-11-02T22:30:00.000Z",
+        "end": "2026-11-02T23:15:00.000Z",
+        "updatedAt": "2026-11-02T20:16:57.407Z",
+        "eventId": "calendar-demo-2",
+        "meetingUrl": "https://meet.example.com/demo-2",
+        "declined": ["Jordan Lee"]
+      },
+      "calendar": {
+        "start": "2026-11-02T22:30:00.000Z",
+        "end": "2026-11-02T23:15:00.000Z",
+        "updatedAt": "2026-11-02T20:16:57.407Z",
+        "eventId": "calendar-demo-2",
+        "meetingUrl": "https://meet.example.com/demo-2",
+        "declined": ["Jordan Lee"]
+      },
+      "confirmation": {
+        "start": "2026-11-02T22:30:00.000Z",
+        "end": "2026-11-02T23:15:00.000Z",
+        "meetingUrl": "https://meet.example.com/demo-2",
+        "sentAt": "2026-11-01T20:28:57.407Z",
+        "receiptId": "sample-demo-2"
+      }
+    },
+    {
+      "id": "demo-3",
+      "applicationId": "application-3",
+      "candidateId": "candidate-3",
+      "candidate": {
+        "name": "Sofia Reed",
+        "email": "sofia.reed@example.com",
+        "timezone": "Europe/London"
+      },
+      "role": "Product Designer",
+      "stage": "Portfolio review",
+      "interviewer": "Sam Taylor",
+      "ats": {
+        "start": "2026-11-02T23:30:00.000Z",
+        "end": "2026-11-03T00:15:00.000Z",
+        "updatedAt": "2026-11-02T20:16:57.407Z",
+        "eventId": "calendar-demo-3",
+        "meetingUrl": "",
+        "declined": []
+      },
+      "calendar": {
+        "start": "2026-11-02T23:30:00.000Z",
+        "end": "2026-11-03T00:15:00.000Z",
+        "updatedAt": "2026-11-02T20:16:57.407Z",
+        "eventId": "calendar-demo-3",
+        "meetingUrl": "",
+        "declined": []
+      },
+      "confirmation": {
+        "start": "2026-11-02T23:30:00.000Z",
+        "end": "2026-11-03T00:15:00.000Z",
+        "meetingUrl": "",
+        "sentAt": "2026-11-01T20:28:57.407Z",
+        "receiptId": "sample-demo-3"
+      }
+    },
+    {
+      "id": "demo-4",
+      "applicationId": "application-4",
+      "candidateId": "candidate-4",
+      "candidate": {
+        "name": "Theo Nakamura",
+        "email": "theo.nakamura@example.com",
+        "timezone": "America/Los_Angeles"
+      },
+      "role": "Backend Engineer",
+      "stage": "Hiring manager conversation",
+      "interviewer": "Alex Rivera",
+      "ats": {
+        "start": "2026-11-03T00:30:00.000Z",
+        "end": "2026-11-03T01:15:00.000Z",
+        "updatedAt": "2026-11-02T20:16:57.407Z",
+        "eventId": "calendar-demo-4",
+        "meetingUrl": "https://meet.example.com/demo-4",
+        "declined": []
+      },
+      "calendar": {
+        "start": "2026-11-03T00:30:00.000Z",
+        "end": "2026-11-03T01:15:00.000Z",
+        "updatedAt": "2026-11-02T20:16:57.407Z",
+        "eventId": "calendar-demo-4",
+        "meetingUrl": "https://meet.example.com/demo-4",
+        "declined": []
+      },
+      "confirmation": {
+        "start": "2026-11-03T00:30:00.000Z",
+        "end": "2026-11-03T01:15:00.000Z",
+        "meetingUrl": "https://meet.example.com/demo-4",
+        "sentAt": "2026-11-01T20:28:57.407Z",
+        "receiptId": "sample-demo-4"
+      }
+    },
+    {
+      "id": "demo-5",
+      "applicationId": "application-5",
+      "candidateId": "candidate-5",
+      "candidate": {
+        "name": "Ella Park",
+        "email": "ella.park@example.com",
+        "timezone": "America/New_York"
+      },
+      "role": "Operations Associate",
+      "stage": "Introductory conversation",
+      "interviewer": "Casey Moore",
+      "ats": {
+        "start": "2026-11-03T01:30:00.000Z",
+        "end": "2026-11-03T02:15:00.000Z",
+        "updatedAt": "2026-11-02T20:16:57.407Z",
+        "eventId": "calendar-demo-5",
+        "meetingUrl": "https://meet.example.com/demo-5",
+        "declined": []
+      },
+      "calendar": {
+        "start": "2026-11-03T01:30:00.000Z",
+        "end": "2026-11-03T02:15:00.000Z",
+        "updatedAt": "2026-11-02T20:16:57.407Z",
+        "eventId": "calendar-demo-5",
+        "meetingUrl": "https://meet.example.com/demo-5",
+        "declined": []
+      },
+      "confirmation": null
+    },
+    {
+      "id": "demo-6",
+      "applicationId": "application-6",
+      "candidateId": "candidate-6",
+      "candidate": {
+        "name": "Noah Williams",
+        "email": "noah.williams@example.com",
+        "timezone": "Europe/London"
+      },
+      "role": "Customer Success Lead",
+      "stage": "Team interview",
+      "interviewer": "Sam Taylor",
+      "ats": {
+        "start": "2026-11-03T02:30:00.000Z",
+        "end": "2026-11-03T03:15:00.000Z",
+        "updatedAt": "2026-11-02T20:16:57.407Z",
+        "eventId": "calendar-demo-6",
+        "meetingUrl": "https://meet.example.com/demo-6",
+        "declined": []
+      },
+      "calendar": {
+        "start": "2026-11-03T02:30:00.000Z",
+        "end": "2026-11-03T03:15:00.000Z",
+        "updatedAt": "2026-11-02T20:16:57.407Z",
+        "eventId": "calendar-demo-6",
+        "meetingUrl": "https://meet.example.com/demo-6",
+        "declined": []
+      },
+      "confirmation": {
+        "start": "2026-11-03T02:30:00.000Z",
+        "end": "2026-11-03T03:15:00.000Z",
+        "meetingUrl": "https://meet.example.com/demo-6",
+        "sentAt": "2026-11-01T20:28:57.407Z",
+        "receiptId": "sample-demo-6"
+      }
+    }
+  ]
+}

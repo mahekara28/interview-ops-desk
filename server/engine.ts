@@ -29,19 +29,19 @@ export function inspect(i: Interview): Issue[] {
     return issues;
   }
   const c = i.calendar;
-  if (c.cancelled) {
+  if (c.cancelled || i.ats.cancelled) {
     add(
       'cancelled',
       'Interview was cancelled',
-      'Review the cancellation in Greenhouse and confirm the next step with the hiring team.',
+      'Review the cancellation in the source system and confirm the next step with the hiring team.',
       true,
     );
     return issues;
   }
   if (
-    !sameInstant(c.start, i.greenhouse.start) ||
-    !sameInstant(c.end, i.greenhouse.end) ||
-    c.meetingUrl !== i.greenhouse.meetingUrl
+    !sameInstant(c.start, i.ats.start) ||
+    !sameInstant(c.end, i.ats.end) ||
+    c.meetingUrl !== i.ats.meetingUrl
   ) {
     add(
       'source_mismatch',

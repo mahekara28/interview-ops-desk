@@ -2704,3 +2704,341 @@ dialog p {
     font-size: 9px;
   }
 }
+
+/* Template and evidence views use the same desktop surfaces as the coordination desk. */
+.template-view {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.template-view > *,
+.template-view .setup-grid > * {
+  min-width: 0;
+}
+.template-view .eyebrow {
+  color: #4c6040;
+  font-size: 10px;
+}
+.template-view code {
+  color: #465b38;
+}
+.template-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 30px;
+  background: #e7eee1;
+  border: 1px solid #cdd8c5;
+  border-radius: 16px;
+  color: #294633;
+}
+.template-intro h2 {
+  font-family: 'Manrope Variable', sans-serif;
+  font-size: 28px;
+  margin: 10px 0;
+  letter-spacing: -1px;
+}
+.template-intro p {
+  max-width: 660px;
+  margin: 0;
+  line-height: 1.7;
+}
+.template-intro > svg {
+  flex-shrink: 0;
+}
+.template-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid #d9dfd5;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.template-steps > div {
+  padding: 18px;
+  background: #fafbf7;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.template-steps > div + div {
+  border-left: 1px solid #d9dfd5;
+}
+.template-steps span {
+  font-size: 12px;
+  color: #57684b;
+}
+.template-steps strong {
+  font-size: 13px;
+}
+.template-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+.upload-label {
+  position: relative;
+  cursor: pointer;
+}
+.upload-label input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  inset: 0;
+  cursor: pointer;
+}
+.upload-label:focus-within {
+  outline: 3px solid #476e53;
+  outline-offset: 3px;
+}
+.upload-label.disabled {
+  opacity: 0.5;
+}
+.template-code {
+  padding: 14px;
+  background: #edf0e8;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+.template-view code,
+.candidate-brief code {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.template-success {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid #bdd1b7;
+  border-radius: 12px;
+  background: #f0f6eb;
+}
+.template-success h3 {
+  margin: 0 0 4px;
+}
+.template-success p {
+  margin: 0;
+}
+.template-success .button {
+  margin-left: auto;
+}
+.snapshot-preview {
+  background: #fffefa;
+  border: 1px solid #d9dfd5;
+  border-radius: 14px;
+  padding: 24px;
+}
+.snapshot-preview > p,
+.snapshot-preview .panel-heading p {
+  font-size: 13px;
+  color: #5e6657;
+  line-height: 1.6;
+}
+.snapshot-table {
+  overflow: auto;
+  margin: 18px 0 24px;
+}
+.snapshot-table table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+.snapshot-table th {
+  color: #5e6657;
+  font-size: 12px;
+  font-weight: 600;
+}
+.snapshot-table td,
+.snapshot-table th {
+  padding: 12px 8px;
+  border-bottom: 1px solid #e5e8df;
+}
+.snapshot-table td {
+  font-size: 13px;
+}
+.snapshot-table small {
+  display: block;
+  color: #646d5c;
+  margin-top: 4px;
+}
+.mcp-workflow-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 28px;
+  border: 1px solid #d9dfd5;
+  background: #f4f5ee;
+  border-radius: 14px;
+}
+.mcp-workflow-card > svg {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.mcp-workflow-card h3 {
+  margin: 0 0 8px;
+}
+.mcp-workflow-card p {
+  font-size: 14px;
+}
+.mcp-workflow-card blockquote {
+  margin: 14px 0;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #314a36;
+}
+.mcp-workflow-card small {
+  color: #5b6552;
+  line-height: 1.6;
+}
+.candidate-brief {
+  margin: 18px 0;
+  border: 1px solid #dde3d5;
+  border-radius: 10px;
+  background: #f7f8f1;
+  font-size: 13px;
+}
+.candidate-brief summary {
+  padding: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.candidate-brief summary small {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.brief-content {
+  padding: 0 15px 16px;
+  line-height: 1.6;
+}
+.brief-content article {
+  padding: 12px 0;
+  border-top: 1px solid #dde3d5;
+}
+.brief-content dl {
+  display: grid;
+  grid-template-columns: 75px 1fr;
+  gap: 5px;
+  font-size: 12px;
+}
+.brief-content dt {
+  color: #606a55;
+}
+.brief-content dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.brief-limits {
+  font-size: 12px;
+  color: #606a55;
+}
+@media (max-width: 900px) {
+  .template-steps {
+    grid-template-columns: 1fr 1fr;
+  }
+  .template-steps > div {
+    border: 1px solid #d9dfd5;
+  }
+}
+@media (max-width: 600px) {
+  .template-intro,
+  .snapshot-preview {
+    padding: 18px;
+  }
+  .template-intro > svg {
+    display: none;
+  }
+  .template-steps {
+    grid-template-columns: 1fr;
+  }
+  .template-success {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .template-success .button {
+    margin-left: 0;
+  }
+  .snapshot-preview .panel-heading {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .snapshot-table table {
+    min-width: 420px;
+  }
+  .mcp-workflow-card {
+    padding: 18px;
+  }
+}
+@media (max-width: 680px) {
+  .sidebar nav {
+    min-width: 0;
+    flex: 1;
+    overflow-x: auto;
+  }
+  .sidebar nav button {
+    flex-shrink: 0;
+  }
+  .template-view {
+    width: 100%;
+  }
+}
+@media (max-width: 680px) {
+  .sidebar {
+    height: 70px;
+  }
+  .sidebar nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: visible;
+    gap: 2px;
+  }
+  .sidebar nav button {
+    min-width: 0;
+    padding: 5px 2px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+  }
+  .sidebar nav button > span {
+    font-size: 9px;
+  }
+  .sidebar nav button b {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .snapshot-table table {
+    min-width: 0;
+  }
+  .snapshot-table thead {
+    position: absolute;
+    clip-path: inset(50%);
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .snapshot-table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    padding: 10px 0;
+    border-bottom: 1px solid #e5e8df;
+  }
+  .snapshot-table td {
+    border: 0;
+    padding: 4px 0;
+  }
+  .snapshot-table td:first-child {
+    grid-column: 1 / -1;
+  }
+  .snapshot-table td:last-child::before {
+    content: 'Gaps: ';
+    color: #5e6657;
+  }
+}

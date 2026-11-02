@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import type { DeskState, RecordView, Slot } from '../shared';
 import { displayDate, displayTime } from '../shared';
+import { CandidateBrief } from './candidate-brief';
 
 export function Evidence({
   record: r,
@@ -43,7 +44,9 @@ export function Evidence({
       <div className="source-name">
         <strong>
           {source === 'greenhouse'
-            ? 'Greenhouse'
+            ? r.source.provider === 'greenhouse'
+              ? 'Greenhouse'
+              : 'ATS record'
             : source === 'calendar'
               ? 'Google Calendar'
               : 'Candidate confirmation'}
@@ -55,7 +58,11 @@ export function Evidence({
               : 'No record in this desk'
             : r.mode === 'demo'
               ? 'Sample evidence'
-              : 'Imported evidence'}
+              : r.source.kind === 'synthetic'
+                ? 'Synthetic sample'
+                : r.mode === 'imported'
+                  ? 'Uploaded snapshot'
+                  : 'API evidence'}
         </small>
       </div>
       <div className="source-time">
@@ -95,7 +102,7 @@ export function Evidence({
         </span>
         <span>
           <CalendarDays size={14} />
-          {displayDate(r.greenhouse.start)}
+          {displayDate(r.ats.start)}
         </span>
       </div>
       <div className="section-label">
@@ -103,18 +110,19 @@ export function Evidence({
         <span>REV {String(r.revision).padStart(2, '0')}</span>
       </div>
       <div className="evidence-table">
-        {slot(r.greenhouse, 'greenhouse')}
+        {slot(r.ats, 'greenhouse')}
         {slot(r.calendar, 'calendar')}
         {slot(r.notice, 'confirmation')}
       </div>
       <div className="timezone-note">
         <Clock3 size={13} />
         <span>
-          Candidate’s time:{' '}
-          <strong>{displayTime(r.calendar?.start ?? r.greenhouse.start, r.timezone)}</strong> ·{' '}
+          {r.timezoneIsDefault ? 'Display time (default)' : 'Candidate’s time'}:{' '}
+          <strong>{displayTime(r.calendar?.start ?? r.ats.start, r.timezone)}</strong> ·{' '}
           {r.timezone}
         </span>
       </div>
+      <CandidateBrief applicationId={r.applicationId} workspace={r.mode} revision={r.revision} />
       <div className="findings">
         {r.issues.length ? (
           r.issues.map((issue) => (
